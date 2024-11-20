@@ -1,6 +1,11 @@
 import React from 'react';
-import {buildPath, extractParams, ExtractRouteParams, IsEmptyObject, matchPath} from './utils';
-
+import {
+    buildPath,
+    extractParams,
+    ExtractRouteParams,
+    IsEmptyObject,
+    matchPath,
+} from './utils';
 
 type RouteDefinition<Path extends string> = {
     path: Path;
@@ -18,54 +23,64 @@ interface RouterProps {
     pageNotFound?: React.ReactNode;
 }
 
-type LinkProps<Path extends string> = IsEmptyObject<
-    ExtractRouteParams<Path>
-> extends true
-    ? {
-        to: Path;
-        params?: undefined;
-        children: React.ReactNode;
-    }
-    : {
-        to: Path;
-        params: ExtractRouteParams<Path>;
-        children: React.ReactNode;
-    };
-
+type LinkProps<Path extends string> =
+    IsEmptyObject<ExtractRouteParams<Path>> extends true
+        ? {
+              to: Path;
+              params?: undefined;
+              children: React.ReactNode;
+          }
+        : {
+              to: Path;
+              params: ExtractRouteParams<Path>;
+              children: React.ReactNode;
+          };
 
 const NotFound: React.FC = () => {
     return <div>404 Not Found</div>;
-}
+};
 
-const RouterContext = React.createContext<RouterContextType | undefined>(undefined);
-
+const RouterContext = React.createContext<RouterContextType | undefined>(
+    undefined,
+);
 
 const Router: React.FC<RouterProps> = ({
-                                           routes,
-                                           initialPath = '/',
-                                           pageNotFound = <NotFound/>,
-                                       }) => {
+    routes,
+    initialPath = '/',
+    pageNotFound = <NotFound />,
+}) => {
     const [currentPath, setCurrentPath] = React.useState(initialPath);
+
+    React.useEffect(() => {
+        const handlePopState = () => {
+            setCurrentPath(window.location.pathname);
+        };
+
+        window.addEventListener('popstate', handlePopState);
+        return () => {
+            window.removeEventListener('popstate', handlePopState);
+        };
+    }, []);
 
     const navigate = (path: string) => {
         setCurrentPath(path);
-        window.history.pushState({}, "", path);
+        window.history.pushState({}, '', path);
     };
 
-    const route = routes.find(r => matchPath(r.path, currentPath));
+    const route = routes.find((r) => matchPath(r.path, currentPath));
 
     const routerContextValue = React.useMemo(
         () => ({
             currentPath,
             navigate,
         }),
-        [currentPath]
+        [currentPath],
     );
 
     return (
         <RouterContext.Provider value={routerContextValue}>
             {route ? (
-                <route.component {...extractParams(route.path, currentPath)}/>
+                <route.component {...extractParams(route.path, currentPath)} />
             ) : (
                 pageNotFound
             )}
@@ -73,20 +88,21 @@ const Router: React.FC<RouterProps> = ({
     );
 };
 
-const createRouter = <Path extends string>(
-    routes: RouteDefinition<Path>[]
-) => {
+const createRouter = <Path extends string>(routes: RouteDefinition<Path>[]) => {
     const TypedRouter: React.FC<Omit<RouterProps, 'routes'>> = (props) => {
         return <Router routes={routes} {...props} />;
     };
     return TypedRouter;
-}
+};
 
-
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const createLink = <PathDefined extends string, >(routes: RouteDefinition<PathDefined>[]) => {
-    const TypedLink = <Path extends PathDefined, >({to, params, children}: LinkProps<Path>) => {
+const createLink = <PathDefined extends string>(
+    _: RouteDefinition<PathDefined>[],
+) => {
+    return <Path extends PathDefined>({
+        to,
+        params,
+        children,
+    }: LinkProps<Path>) => {
         const context = React.useContext(RouterContext);
         if (!context) {
             throw new Error('Link must be used within a Router');
@@ -98,24 +114,17 @@ const createRouter = <Path extends string>(
             context.navigate(path);
         };
 
-
         return (
             <a href={'#'} onClick={handleClick}>
                 {children}
             </a>
         );
-    }
-    return TypedLink;
-}
+    };
+};
 
 const createRoute = <Path extends string>(
     path: RouteDefinition<Path>['path'],
-    component: RouteDefinition<Path>['component']
-): RouteDefinition<Path> => ({path, component});
+    component: RouteDefinition<Path>['component'],
+): RouteDefinition<Path> => ({ path, component });
 
-
-export {
-    createRoute,
-    createRouter,
-    createLink,
-}
+export { createRoute, createRouter, createLink };

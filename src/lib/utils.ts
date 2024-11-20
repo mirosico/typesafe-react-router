@@ -1,60 +1,62 @@
-
 type ExtractRouteParams<Path extends string> =
     Path extends `${infer _Start}:${infer Param}/${infer Rest}`
         ? { [k in Param]: string } & ExtractRouteParams<`/${Rest}`>
         : Path extends `${infer _Start}:${infer Param}`
-            ? { [k in Param]: string }
-            : Record<string, string>;
+          ? { [k in Param]: string }
+          : Record<never, never>;
 
-type IsEmptyObject<T extends object> = keyof T extends never ? true : false;
-
+type IsEmptyObject<T extends Record<any, any>> = keyof T extends never
+    ? true
+    : false;
 
 const matchPath = (pathPattern: string, currentPath: string): boolean => {
-    const regexPattern = '^' + pathPattern.replace(/:[^/]+/g, '([^/]+)') + '$';
-    const regex = new RegExp(regexPattern);
+    const regex = pathPatternToRegex(pathPattern);
     return regex.test(currentPath);
-}
+};
+
+const pathPatternToRegex = (pathPattern: string): RegExp => {
+    const regexPattern = '^' + pathPattern.replace(/:[^/]+/g, '([^/]+)') + '$';
+    return new RegExp(regexPattern);
+};
+
+const extractParamNames = (pathPattern: string): string[] => {
+    return (pathPattern.match(/:[^/]+/g) || []).map((param) => param.slice(1));
+};
+
+const extractParamValues = (
+    pathPattern: string,
+    currentPath: string,
+): string[] => {
+    const regex = pathPatternToRegex(pathPattern);
+    return (currentPath.match(regex) || []).slice(1);
+};
 
 const extractParams = <Path extends string>(
     pathPattern: Path,
-    currentPath: string
+    currentPath: string,
 ): ExtractRouteParams<Path> => {
-    const paramNames = (pathPattern.match(/:[^/]+/g) || []).map(param =>
-        param.slice(1)
-    );
-
-    const regexPattern = '^' + pathPattern.replace(/:[^/]+/g, '([^/]+)') + '$';
-    const regex = new RegExp(regexPattern);
-    const match = currentPath.match(regex);
-
-    const params = {} as ExtractRouteParams<Path>;
-    if (match) {
-        paramNames.forEach((name, index) => {
-            params[name] = match[index + 1];
-        });
+    const paramValues = extractParamValues(pathPattern, currentPath);
+    const paramNames = extractParamNames(pathPattern);
+    if (paramValues.length !== paramNames.length) {
+        return {} as ExtractRouteParams<Path>;
     }
+    return paramNames.reduce((params, name, index) => {
+        return {
+            ...params,
+            [name]: paramValues[index],
+        };
+    }, {} as ExtractRouteParams<Path>);
+};
 
-    return params;
-}
-
-const buildPath = (
-    path: string,
-    params?: Record<string, string>
-): string => {
+const buildPath = (path: string, params?: Record<string, string>): string => {
     let builtPath = path;
-    if (params) {
-        for (const key in params) {
+    params &&
+        Object.keys(params).forEach((key) => {
             builtPath = builtPath.replace(`:${key}`, params[key]);
-        }
-    }
+        });
     return builtPath;
-}
+};
 
+export { matchPath, extractParams, buildPath };
 
-export {
-    matchPath,
-    extractParams,
-    buildPath,
-}
-
-export type { ExtractRouteParams, IsEmptyObject }
+export type { ExtractRouteParams, IsEmptyObject };
