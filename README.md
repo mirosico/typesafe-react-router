@@ -11,7 +11,7 @@ npm run dev    # run demo app
 npm run build  # build demo app
 ```
 
-## Setup example
+## Usage example
 
 ```js
 const routes = [
