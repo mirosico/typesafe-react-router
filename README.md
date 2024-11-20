@@ -57,4 +57,15 @@ There are integration and unit tests. To run them:
 ```bash
 npm run test
 ```
+![img.png](media/tests.png)
+
+## Run the demo app
+
+```bash
+npm run dev
+```
+
+
+
+
 
