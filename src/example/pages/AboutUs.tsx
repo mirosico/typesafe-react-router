@@ -6,7 +6,7 @@ export const AboutUs = () => {
             <div>
                 <Link
                     to="/users/:userId/test/:testId"
-                    params={{ userId: '123', testId: 'test' }}
+                    params={{ userId: '123', testId: 'test123' }}
                 >
                     Go to User id '123' and test id 'test123'
                 </Link>

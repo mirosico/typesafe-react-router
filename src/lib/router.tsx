@@ -5,7 +5,7 @@ import {
     ExtractRouteParams,
     IsEmptyObject,
     matchPath,
-} from './utils';
+} from './router.utils.ts';
 
 type RouteDefinition<Path extends string> = {
     path: Path;

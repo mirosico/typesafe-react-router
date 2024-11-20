@@ -57,6 +57,12 @@ const buildPath = (path: string, params?: Record<string, string>): string => {
     return builtPath;
 };
 
-export { matchPath, extractParams, buildPath };
+export {
+    matchPath,
+    extractParams,
+    buildPath,
+    extractParamNames,
+    extractParamValues,
+};
 
 export type { ExtractRouteParams, IsEmptyObject };
