@@ -28,11 +28,11 @@ const Router = createRouter(routes);
 
 - path suggestions:
 
-![img.png](media/img.png)
+![img.png](media/pathSuggestion.png)
 
 - parameter suggestions:
 
-![img.png](media/params.png)
+![img.png](media/parametrsSuggestion.png)
 
 
 - instead of using useParams, I've decided to pass parameters as props to the component:
